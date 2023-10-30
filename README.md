@@ -57,6 +57,8 @@ In the above structure:
 - `notebooks/` can be used to store Jupyter notebooks.
 - `scripts/` can store various utility scripts or the main code to run the experiments.
 
+
+## Virtual Environment
 The project used python `3.10.7`. For testing reasons please use a virtual environment with the `requirements.txt` file.
 Preferable either with the name `deep` or `venv` as the `.gitignore` filters it out. To use the virtual environment on windows use the command to generate the virtual environment.
 
