@@ -71,4 +71,7 @@ and
 deactivate
 ```
 
-to stop the virtual environment.
+to stop the virtual environment. Note that if you want cuda to work then use the following commands:
+```
+pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
+```
