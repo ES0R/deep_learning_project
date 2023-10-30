@@ -32,19 +32,16 @@ AlexNet will serve as a simple baseline. These models will be assessed in the co
 Project_Root/
 │
 ├── YOLO/
-│   
 │   ├── models/
 │   ├── notebooks/
 │   └── scripts/
 │
 ├── ViT/
-│   ├── data/
 │   ├── models/
 │   ├── notebooks/
 │   └── scripts/
 │
 ├── AlexNet/
-│   ├── data/
 │   ├── models/
 │   ├── notebooks/
 │   └── scripts/
@@ -60,7 +57,7 @@ In the above structure:
 - `notebooks/` can be used to store Jupyter notebooks.
 - `scripts/` can store various utility scripts or the main code to run the experiments.
 
-The project used python `3.10.11`. For testing reasons please use a virtual environment with the `requirements.txt` file preferable either with the name `deep` or `venv` as the `.gitignore` filters it out. To use the virtual environment on windows use the command
+The project used python `3.10.7`. For testing reasons please use a virtual environment with the `requirements.txt` file preferable either with the name `deep` or `venv` as the `.gitignore` filters it out. To use the virtual environment on windows use the command
 ```
 .\deep\Scripts\activate.ps1
 ```
