@@ -58,19 +58,19 @@ In the above structure:
 - `scripts/` can store various utility scripts or the main code to run the experiments.
 
 The project used python `3.10.7`. For testing reasons please use a virtual environment with the `requirements.txt` file.
-```pip3 install -r requirements.txt```
 Preferable either with the name `deep` or `venv` as the `.gitignore` filters it out. To use the virtual environment on windows use the command
 ```
 .\deep\Scripts\activate.ps1
 ```
-
-and 
-
+To install the dependencies for the environment use:
+```
+pip3 install -r requirements.txt
+```
+and to stop the virtual environment.
 ```
 deactivate
 ```
-
-to stop the virtual environment. Note that if you want cuda to work then use the following commands after installing `requirements.txt`:
+Note that if you want cuda to work with the software then use the following commands after installing `requirements.txt`:
 ```
 pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
 ```
