@@ -58,7 +58,13 @@ In the above structure:
 - `scripts/` can store various utility scripts or the main code to run the experiments.
 
 The project used python `3.10.7`. For testing reasons please use a virtual environment with the `requirements.txt` file.
-Preferable either with the name `deep` or `venv` as the `.gitignore` filters it out. To use the virtual environment on windows use the command
+Preferable either with the name `deep` or `venv` as the `.gitignore` filters it out. To use the virtual environment on windows use the command to generate the virtual environment.
+
+```
+python3 -m venv deep
+```
+To activate the environment do:
+
 ```
 .\deep\Scripts\activate.ps1
 ```
