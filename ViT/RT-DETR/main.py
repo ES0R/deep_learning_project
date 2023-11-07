@@ -6,9 +6,8 @@ from models.backbone import Backbone
 from models.transformer import Transformer
 from models.matcher import HungarianMatcher
 from models.loss import SetCriterion
-from datasets.coco import CocoDetection
-from models.utils import collate_fn
 from training.trainer import Trainer
+from datasets.coco import CocoDetection
 import json
 
 # Load configurations

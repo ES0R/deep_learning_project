@@ -69,8 +69,10 @@ class Trainer:
 
         return epoch_loss / len(self.val_loader)
 
-with open('config.json') as config_file:
-    config = json.load(config_file)
+config = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'config.json')))
+
+#with open('config.json') as config_file:
+#    config = json.load(config_file)
 
 # Define the root directory of your project dynamically
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from models.backbone import build_backbone
+from models.backbone import Backbone
 from models.transformer import Transformer
 from models.utils import MLP
 
