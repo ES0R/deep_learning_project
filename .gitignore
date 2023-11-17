@@ -3,7 +3,11 @@ deeper/
 data/
 ultra/
 
+runs/
+results/
 
+*.pkl
+*.pt
 
 
 # Byte-compiled / optimized / DLL files
