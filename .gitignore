@@ -5,6 +5,7 @@ ultra/
 
 runs/
 results/
+datasets/
 
 *.pkl
 *.pt
