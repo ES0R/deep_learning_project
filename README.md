@@ -63,12 +63,12 @@ The project used python `3.10.7`. For testing reasons please use a virtual envir
 Preferable either with the name `deep` or `venv` as the `.gitignore` filters it out. To use the virtual environment on windows use the command to generate the virtual environment.
 
 ```
-python3 -m venv deep
+python3 -m venv deeper
 ```
 To activate the environment do:
 
 ```
-.\deep\Scripts\activate.ps1
+source \deeper\Scripts\activate
 ```
 To install the dependencies for the environment use:
 ```
@@ -79,6 +79,45 @@ and to stop the virtual environment.
 deactivate
 ```
 Note that if you want cuda to work with the software then use the following commands after installing `requirements.txt`:
+
+## HPC
+This makes the terminal more readable and enables the GPU node where the code will be executed.
+### GPU Node
 ```
-pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
+a100sh
 ```
+### Colorful prompt with Git branch
+```
+PS1='\[\e[1;36m\]\u@\h:\[\e[1;94m\]\w\[\e[0m\] $ '
+```
+
+### Modified LS_COLORS
+```
+export LS_COLORS="di=1;94:*.tar=1;31:*.tgz=1;31:*.arc=1;31:*.rar=1;31:*.zip=1;31:*.gz=1;31:*.bz2=1;31:*.xz=1;31:*.exe=$
+```
+### Enable colorized output for ls
+```
+alias ls='ls --color=auto'
+```
+### Git prompt
+```
+source ~/.git-prompt.sh
+```
+### Custom Alias
+```
+alias train='/zhome/95/b/147257/Desktop/deep_learning_project/train.sh'
+```
+
+### Clear
+```
+clear
+```
+
+## Training
+
+Run the `train.sh` script with argument `YOLO` or `RTDETR` for training either. To change training, adjust the `config.json` file. Example:
+
+```
+./train.sh YOLO
+```
+This code lodas python `3.10.12`, activates the virtual environment automatically and trains the model.

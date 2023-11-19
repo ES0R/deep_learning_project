@@ -1,20 +1,32 @@
+import argparse
 import json
 import os
-from ultralytics import RTDETR
-from utils import generate_dynamic_name 
+from ultralytics import RTDETR, YOLO  
+from utils import generate_dynamic_name
+
+# Parse the model type argument
+parser = argparse.ArgumentParser()
+parser.add_argument("model", help="Specify the model type (RTDETR or YOLO)")
+args = parser.parse_args()
 
 # Load configuration from JSON file
 with open('../config.json', 'r') as config_file:
     config = json.load(config_file)
 
-# Load a COCO-pretrained RT-DETR-l model
-model = RTDETR(config['model'])
 
-# Display model information (optional)
-model.info()
+# Initialize model
+if args.model.lower().startswith("rtdetr"):
+    model = RTDETR(args.model)
+elif args.model.lower().startswith("yolo"):
+    model = YOLO(args.model)   
+else:
+    raise ValueError("Unsupported model type. Please use RTDETR or YOLO.")
 
-# Generate a dynamic name based on the model
-dynamic_name = generate_dynamic_name(config['model'])
+# Display model 
+#model.info()
+
+# Generate a dynamic name
+dynamic_name = generate_dynamic_name(args.model.lower())
 
 # Train the model using parameters from the config file
 results = model.train(
@@ -25,5 +37,12 @@ results = model.train(
     batch=config['batch'],
     imgsz=config['imgsz'],
     iou=config['iou'],
-    name=dynamic_name
+    name=dynamic_name,
+    translate=config['translate'],
+    scale=config['scale'],
+    shear=config['shear'],
+    perspective=config['perspective'],
+    flipud=config['flipud'],
+    fliplr=config['fliplr'],
+    classes=config['classes']
 )
