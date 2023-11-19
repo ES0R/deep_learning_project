@@ -1,0 +1,11 @@
+{
+    "task": "detect",
+    "mode": "train",
+    "model": "models/rtdetr-l.pt",
+    "data": "coco8.yaml",
+    "epochs": 2,
+    "patience": 50,
+    "batch": 16,
+    "imgsz": 640,
+    "iou": 0.9
+}
