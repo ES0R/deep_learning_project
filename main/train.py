@@ -37,12 +37,5 @@ results = model.train(
     batch=config['batch'],
     imgsz=config['imgsz'],
     iou=config['iou'],
-    name=dynamic_name,
-    translate=config['translate'],
-    scale=config['scale'],
-    shear=config['shear'],
-    perspective=config['perspective'],
-    flipud=config['flipud'],
-    fliplr=config['fliplr'],
     classes=config['classes']
 )
