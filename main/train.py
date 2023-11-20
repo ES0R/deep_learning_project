@@ -37,5 +37,6 @@ results = model.train(
     batch=config['batch'],
     imgsz=config['imgsz'],
     iou=config['iou'],
+    name=dynamic_name,
     classes=config['classes']
 )
