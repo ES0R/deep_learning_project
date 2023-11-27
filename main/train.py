@@ -3,6 +3,7 @@ import json
 import os
 from ultralytics import RTDETR, YOLO  
 from utils import generate_dynamic_name
+import torch
 
 # Parse the model type argument
 parser = argparse.ArgumentParser()
@@ -13,6 +14,8 @@ args = parser.parse_args()
 with open('../config.json', 'r') as config_file:
     config = json.load(config_file)
 
+# Disable enforcing deterministic algorithms
+torch.use_deterministic_algorithms(False)
 
 # Initialize model
 if args.model.lower().startswith("rtdetr"):
@@ -40,3 +43,7 @@ results = model.train(
     name=dynamic_name,
     classes=config['classes']
 )
+
+metrics = model.val()
+print("map50: " + str(metrics.box.map50))
+print("map75: " + str(metrics.box.map75))
