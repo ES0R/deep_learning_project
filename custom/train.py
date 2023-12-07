@@ -40,6 +40,9 @@ def coco_to_voc(coco_boxes):
         x_min, y_min, width, height = box
         x_max = x_min + width
         y_max = y_min + height
+        # Ensure x_max > x_min and y_max > y_min
+        x_max = max(x_max, x_min + 1)
+        y_max = max(y_max, y_min + 1)
         voc_boxes.append([x_min, y_min, x_max, y_max])
     return voc_boxes
 
@@ -94,36 +97,32 @@ class CocoDataset(Dataset):
         self.transform = transform
 
     def __getitem__(self, index):
-        # Load the image
         image_id = self.image_ids[index]
         image_info = self.coco.loadImgs(image_id)[0]
         image_path = os.path.join(self.root, image_info['file_name'])
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Load annotations (bounding boxes and labels)
         annotations = self.coco.loadAnns(self.coco.getAnnIds(imgIds=image_id))
-        boxes = np.array([ann['bbox'] for ann in annotations])  # COCO format: [x_min, y_min, width, height]
+        boxes = np.array([ann['bbox'] for ann in annotations])
         labels = np.array([ann['category_id'] for ann in annotations])
-        labels = np.array([categories_dict.get(label, 0) for label in labels])  # Map to 0 (background) if label not found
+        
+        # Shift labels by +1
+        labels = labels + 1
 
-        # Remap the labels using the categories_dict
-        labels = np.array([categories_dict.get(label, 0) for label in labels])  # Map to 0 (background) if label not found
-
-        # Convert COCO format boxes to Pascal VOC format: [x_min, y_min, x_max, y_max]
+        # Convert COCO format boxes to Pascal VOC format before transformation
         boxes = coco_to_voc(boxes)
 
-        # Apply transformations
         if self.transform:
+            # Apply transformations to the image and bounding boxes
             transformed = self.transform(image=image, bboxes=boxes, labels=labels)
             image = transformed['image']
             boxes = transformed['bboxes']
             labels = transformed['labels']
 
-        # Pad boxes and labels to a fixed size
-        boxes, labels = pad_to_fixed_size(boxes, labels, pad_size=93, pad_value=0)
+        boxes, labels = pad_to_fixed_size(boxes, labels)
 
-        # Convert boxes and labels to PyTorch tensors
+        # Convert boxes and labels to tensors
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
         labels = torch.as_tensor(labels, dtype=torch.int64)
 
@@ -152,24 +151,109 @@ val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=Fals
 
 # Load and process categories
 # Load class names and IDs from the COCO dataset
+# Load and process categories
 with open(anns_file_train, 'r') as f:
     dataset = json.loads(f.read())
-categories = dataset['categories']
+categories_df = pd.DataFrame(dataset['categories'])
+categories_df['label'] = categories_df['id'].astype(int) + 1
+categories_dict = dict(zip(categories_df['label'], categories_df['name']))
+categories_dict[0] = "background"
 
-# Create a dictionary mapping class IDs to class names
-categories_dict = {0: "background"}  # Adding background class
-class_id_to_name = {0: "background"}
+# Validate the dictionary
+categories_dict = {0: "background"}  # Background class
+idx = 1  # Start indexing from 1 for actual classes
+
+categories = [
+    {"id": 1, "name": "person"},
+    {"id": 2, "name": "bicycle"},
+    {"id": 3, "name": "car"},
+    {"id": 4, "name": "motorcycle"},
+    {"id": 5, "name": "airplane"},
+    {"id": 6, "name": "bus"},
+    {"id": 7, "name": "train"},
+    {"id": 8, "name": "truck"},
+    {"id": 9, "name": "boat"},
+    {"id": 10, "name": "traffic light"},
+    {"id": 11, "name": "fire hydrant"},
+    {"id": 12, "name": "stop sign"},
+    {"id": 13, "name": "parking meter"},
+    {"id": 14, "name": "bench"},
+    {"id": 15, "name": "bird"},
+    {"id": 16, "name": "cat"},
+    {"id": 17, "name": "dog"},
+    {"id": 18, "name": "horse"},
+    {"id": 19, "name": "sheep"},
+    {"id": 20, "name": "cow"},
+    {"id": 21, "name": "elephant"},
+    {"id": 22, "name": "bear"},
+    {"id": 23, "name": "zebra"},
+    {"id": 24, "name": "giraffe"},
+    {"id": 25, "name": "backpack"},
+    {"id": 26, "name": "umbrella"},
+    {"id": 27, "name": "handbag"},
+    {"id": 28, "name": "tie"},
+    {"id": 29, "name": "suitcase"},
+    {"id": 30, "name": "frisbee"},
+    {"id": 31, "name": "skis"},
+    {"id": 32, "name": "snowboard"},
+    {"id": 33, "name": "sports ball"},
+    {"id": 34, "name": "kite"},
+    {"id": 35, "name": "baseball bat"},
+    {"id": 36, "name": "baseball glove"},
+    {"id": 37, "name": "skateboard"},
+    {"id": 38, "name": "surfboard"},
+    {"id": 39, "name": "tennis racket"},
+    {"id": 40, "name": "bottle"},
+    {"id": 41, "name": "wine glass"},
+    {"id": 42, "name": "cup"},
+    {"id": 43, "name": "fork"},
+    {"id": 44, "name": "knife"},
+    {"id": 45, "name": "spoon"},
+    {"id": 46, "name": "bowl"},
+    {"id": 47, "name": "banana"},
+    {"id": 48, "name": "apple"},
+    {"id": 49, "name": "sandwich"},
+    {"id": 50, "name": "orange"},
+    {"id": 51, "name": "broccoli"},
+    {"id": 52, "name": "carrot"},
+    {"id": 53, "name": "hot dog"},
+    {"id": 54, "name": "pizza"},
+    {"id": 55, "name": "donut"},
+    {"id": 56, "name": "cake"},
+    {"id": 57, "name": "chair"},
+    {"id": 58, "name": "couch"},
+    {"id": 59, "name": "potted plant"},
+    {"id": 60, "name": "bed"},
+    {"id": 61, "name": "dining table"},
+    {"id": 62, "name": "toilet"},
+    {"id": 63, "name": "tv"},
+    {"id": 64, "name": "laptop"},
+    {"id": 65, "name": "mouse"},
+    {"id": 66, "name": "remote"},
+    {"id": 67, "name": "keyboard"},
+    {"id": 68, "name": "cell phone"},
+    {"id": 69, "name": "microwave"},
+    {"id": 70, "name": "oven"},
+    {"id": 71, "name": "toaster"},
+    {"id": 72, "name": "sink"},
+    {"id": 73, "name": "refrigerator"},
+    {"id": 74, "name": "book"},
+    {"id": 75, "name": "clock"},
+    {"id": 76, "name": "vase"},
+    {"id": 77, "name": "scissors"},
+    {"id": 78, "name": "teddy bear"},
+    {"id": 79, "name": "hair drier"},
+    {"id": 80, "name": "toothbrush"}
+]
+
 for category in categories:
-    class_id = category['id']
-    class_name = category['name']
-    if class_name.lower() != "unknown":  # Skip 'Unknown' classes
-        categories_dict[class_id] = class_name
-        class_id_to_name[class_id] = class_name
+    if category['name'].lower() != "unknown":
+        categories_dict[category['id']] = idx
+        idx += 1
 
-# Print the dictionary for validation
+# Validate the dictionary
 for label in range(len(categories_dict)):
-    print(f"{label}: {class_id_to_name.get(label, 'Unknown')}")
-
+    print(f"{label}: {categories_dict.get(label, 'Unknown')}")
 
 # Now categories_dict should correctly map all COCO class IDs to names, with no 'Unknown' entries
 
