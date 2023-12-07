@@ -16,7 +16,8 @@ import torch.nn as nn
 import torch
 from torch.optim import Adam
 from torch.nn import MSELoss, SmoothL1Loss, CrossEntropyLoss
-   
+import logging
+from tqdm import tqdm
 from torchvision import datasets, models
 # import the necessary packages
 from torch.nn import Dropout
@@ -28,6 +29,11 @@ from torch.nn import Sequential
 from torch.nn import Sigmoid
 from torch.optim import Adam
 
+def preprocess_labels(labels):
+    # Replace all 'Unknown' (non-background) labels with the index for 'background' (0)
+    labels[labels != 0] = 0  # Assuming 0 is the background index
+    return labels
+
 def coco_to_voc(coco_boxes):
     voc_boxes = []
     for box in coco_boxes:
@@ -37,18 +43,19 @@ def coco_to_voc(coco_boxes):
         voc_boxes.append([x_min, y_min, x_max, y_max])
     return voc_boxes
 
-def pad_to_fixed_size(boxes, labels, pad_size=93, pad_value=0):
-    # Create empty arrays with the fixed size, filled with pad_value for boxes or -1 for labels
-    padded_boxes = np.full((pad_size, 4), pad_value, dtype=np.float32)
-    padded_labels = np.full((pad_size,), 0, dtype=np.int64)  # Now 0 is used for background/padding
+def pad_to_fixed_size(boxes, labels, pad_size=93, image_size=256):
+    # Create empty arrays with the fixed size
+    padded_boxes = np.full((pad_size, 4), [0, 0, image_size, image_size], dtype=np.float32)
+    padded_labels = np.full((pad_size,), 0, dtype=np.int64)  # Use 0 for background
 
-    # Calculate how many items to copy from the original boxes and labels
+    # Copy original boxes and labels
     num_boxes = min(len(boxes), pad_size)
     if num_boxes > 0:
         padded_boxes[:num_boxes] = boxes[:num_boxes]
         padded_labels[:num_boxes] = labels[:num_boxes]
 
     return padded_boxes, padded_labels
+
 
 
 # Function to get a random training sample
@@ -75,8 +82,8 @@ dataset_path = "/dtu/blackhole/19/147257/deep/coco/"
 anns_file_train = dataset_path + "annotations/instances_train2017.json"
 anns_file_val = dataset_path + "annotations/instances_val2017.json"
 image_size = 256
-batch_size = 8
-num_classes = 80
+batch_size = 128
+num_classes = 81
 
 # Custom Dataset Class
 class CocoDataset(Dataset):
@@ -87,32 +94,36 @@ class CocoDataset(Dataset):
         self.transform = transform
 
     def __getitem__(self, index):
+        # Load the image
         image_id = self.image_ids[index]
         image_info = self.coco.loadImgs(image_id)[0]
         image_path = os.path.join(self.root, image_info['file_name'])
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+        # Load annotations (bounding boxes and labels)
         annotations = self.coco.loadAnns(self.coco.getAnnIds(imgIds=image_id))
-        boxes = np.array([ann['bbox'] for ann in annotations])
+        boxes = np.array([ann['bbox'] for ann in annotations])  # COCO format: [x_min, y_min, width, height]
         labels = np.array([ann['category_id'] for ann in annotations])
+        labels = np.array([categories_dict.get(label, 0) for label in labels])  # Map to 0 (background) if label not found
 
-        # Shift labels by +1
-        labels = labels + 1
+        # Remap the labels using the categories_dict
+        labels = np.array([categories_dict.get(label, 0) for label in labels])  # Map to 0 (background) if label not found
 
-        # Convert COCO format boxes to Pascal VOC format before transformation
+        # Convert COCO format boxes to Pascal VOC format: [x_min, y_min, x_max, y_max]
         boxes = coco_to_voc(boxes)
 
+        # Apply transformations
         if self.transform:
-            # Apply transformations to the image and bounding boxes
             transformed = self.transform(image=image, bboxes=boxes, labels=labels)
             image = transformed['image']
             boxes = transformed['bboxes']
             labels = transformed['labels']
 
-        boxes, labels = pad_to_fixed_size(boxes, labels)
+        # Pad boxes and labels to a fixed size
+        boxes, labels = pad_to_fixed_size(boxes, labels, pad_size=93, pad_value=0)
 
-        # Convert boxes and labels to tensors
+        # Convert boxes and labels to PyTorch tensors
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
         labels = torch.as_tensor(labels, dtype=torch.int64)
 
@@ -124,8 +135,9 @@ class CocoDataset(Dataset):
 # Transformations using Albumentations
 transform = A.Compose([
     A.Resize(width=image_size, height=image_size),
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ToTensorV2()
-], bbox_params=A.BboxParams(format='pascal_voc', min_area=500, min_visibility=0.5, label_fields=['labels']))
+], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], min_area=10, min_visibility=0.5))
 
 # Dataset instances
 dataset_path_x = "/dtu/blackhole/19/147257/coco_data/images/"
@@ -139,13 +151,27 @@ val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=Fals
 
 
 # Load and process categories
+# Load class names and IDs from the COCO dataset
 with open(anns_file_train, 'r') as f:
     dataset = json.loads(f.read())
-categories_df = pd.DataFrame(dataset['categories'])
-categories_df['label'] = categories_df['id'].astype(int) + 1
-categories_dict = dict(zip(categories_df['label'], categories_df['name']))
-categories_dict[0] = "background"
+categories = dataset['categories']
 
+# Create a dictionary mapping class IDs to class names
+categories_dict = {0: "background"}  # Adding background class
+class_id_to_name = {0: "background"}
+for category in categories:
+    class_id = category['id']
+    class_name = category['name']
+    if class_name.lower() != "unknown":  # Skip 'Unknown' classes
+        categories_dict[class_id] = class_name
+        class_id_to_name[class_id] = class_name
+
+# Print the dictionary for validation
+for label in range(len(categories_dict)):
+    print(f"{label}: {class_id_to_name.get(label, 'Unknown')}")
+
+
+# Now categories_dict should correctly map all COCO class IDs to names, with no 'Unknown' entries
 
 
 # Load a random sample
@@ -167,6 +193,18 @@ for label, box in zip(labels, boxes):  # Use zip to iterate over labels and boxe
     #    print(" - background or padding")
 
 
+# Assuming categories_df is already loaded from the COCO dataset
+categories_df = pd.DataFrame(dataset['categories'])
+categories_df['label'] = categories_df['id'].astype(int) + 1  # Shift labels by +1
+categories_dict = dict(zip(categories_df['label'], categories_df['name']))
+
+# Add background class
+categories_dict[0] = "background"
+
+all_labels = []
+for label in range(92):  # 80 object categories + 1 background class
+    print(f"{label}: {categories_dict.get(label, 'Unknown')}")
+    all_labels.append(categories_dict.get(label, 'Unknown'))
 #[203.9, 87.33, 107.09, 259.59, 1]
 
 print("init model...")
@@ -175,11 +213,13 @@ print("init model...")
 class ObjectDetector(Module):
     def __init__(self, baseModel, numClasses):
         super(ObjectDetector, self).__init__()
-        # initialize the base model and the number of classes
+        # Initialize the base model and the number of classes
         self.baseModel = baseModel
         self.numClasses = numClasses
         self.num_ftrs = baseModel.fc.in_features
-        # build the regressor head for outputting the bounding boxcoordinates
+
+        # Build the regressor head for outputting the bounding box coordinates
+        # Adjust the output layer to predict 93 boxes each with 4 coordinates
         self.regressor = Sequential(
             Linear(self.num_ftrs, 128),
             ReLU(),
@@ -187,23 +227,31 @@ class ObjectDetector(Module):
             ReLU(),
             Linear(64, 32),
             ReLU(),
-            Linear(32, 4),
+            Linear(32, 93 * 4),  # Output 93 * 4 values for bounding boxes
             Sigmoid())
-        # build the classifier head to predict the class labels
+
+        # Build the classifier head to predict the class labels
+        # Here, we predict class labels for each of the 93 boxes
         self.classifier = Sequential(
-            Linear(self.num_ftrs, self.numClasses),
+            Linear(self.num_ftrs, 93 * self.numClasses),  # Output 93 * numClasses values for class labels
         )
-        # set the classifier of our base model to produce outputs
-        # from the last convolution block
+
+        # Set the classifier of our base model to produce outputs from the last convolution block
         self.baseModel.fc = Identity()
+
     def forward(self, x):
-        # pass the inputs through the base model and then obtain
-        # predictions from two different branches of the network
+        # Pass the inputs through the base model and then obtain predictions from two different branches of the network
         features = self.baseModel(x)
-        bboxes = self.regressor(features)
-        classLogits = self.classifier(features)
-        # return the outputs as a tuple
+
+        # Reshape the output to [batch_size, 93, 4] for bounding boxes
+        bboxes = self.regressor(features).view(-1, 93, 4)
+
+        # Reshape the output to [batch_size, 93, numClasses] for class labels
+        classLogits = self.classifier(features).view(-1, 93, self.numClasses)
+
+        # Return the outputs as a tuple
         return (bboxes, classLogits)
+
     
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -232,26 +280,39 @@ num_epochs = 1
 
 print("starting train...")
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 # Training loop
 for epoch in range(num_epochs):
     model.train()  # Set the model to training mode
-    for i, (images, bboxes, labels) in enumerate(train_loader):
+    total_loss = 0.0
+    progress_bar = tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Epoch {epoch + 1}/{num_epochs}")
+
+    for i, (images, bboxes, labels) in progress_bar:
         images, bboxes, labels = images.to(device), bboxes.to(device), labels.to(device)
+        labels = preprocess_labels(labels)
 
         # Forward pass
         predicted_bboxes, predicted_labels = model(images)
+        predicted_labels_flat = predicted_labels.view(-1, num_classes)
+        labels_flat = labels.view(-1)
 
         # Compute losses
         bbox_loss = regression_loss_fn(predicted_bboxes, bboxes)
-        class_loss = classification_loss_fn(predicted_labels, labels)
-
-        # Combine losses
-        total_loss = bbox_loss + class_loss
+        class_loss = classification_loss_fn(predicted_labels_flat, labels_flat)
+        loss = bbox_loss + class_loss
 
         # Backward pass and optimize
         optimizer.zero_grad()
-        total_loss.backward()
+        loss.backward()
         optimizer.step()
 
-        if i % 10 == 0:  # Print loss every 10 batches
-            print(f"Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(train_loader)}], Total Loss: {total_loss.item()}")
+        total_loss += loss.item()
+
+        # Update tqdm progress bar
+        progress_bar.set_postfix(loss=total_loss / (i + 1))
+
+    # Log epoch summary
+    avg_loss = total_loss / len(train_loader)
+    logging.info(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {avg_loss:.4f}')
