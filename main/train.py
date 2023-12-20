@@ -29,7 +29,7 @@ else:
 dynamic_name = generate_dynamic_name(args.model.lower())
 
 # Train the model using parameters from the config file
-results = model.train(
+results = model.train(classes=[0, 1, 2, 3, 9],
     task=config['task'],
     mode=config['mode'],
     data=config['data'],
@@ -37,5 +37,20 @@ results = model.train(
     batch=config['batch'],
     imgsz=config['imgsz'],
     iou=config['iou'],
-    classes=config['classes']
+    name=dynamic_name,
+    dropout=config['dropout'],
+    weight_decay=config['weight_decay'],
+    optimizer=config['optimizer'],
+    lr0=config['lr0'],
+    fliplr=config['fliplr'],
+    translate=config['translate'],
+    scale=config['scale'],
+    hsv_h=0, 
+    hsv_s=0, 
+    hsv_v=0,
+    mosaic=0
 )
+
+metrics = model.val()
+print("map50: " + str(metrics.box.map50))
+print("map75: " + str(metrics.box.map75))
