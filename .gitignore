@@ -2,6 +2,7 @@ venv/
 deeper/
 data/
 ultra/
+main/loss_plots/
 
 runs/
 results/

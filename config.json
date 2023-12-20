@@ -1,6 +1,7 @@
 {
     "task": "detect",
     "mode": "train",
+<<<<<<< HEAD
     "data": "/zhome/e5/c/147337/deep_learning_project/main/coco.yaml",
     "epochs": 10,
     "batch": 64,
@@ -13,4 +14,12 @@
     "fliplr": 0.5,
     "translate": 0.1,
     "scale": 0.5
+=======
+    "data": "/zhome/95/b/147257/Desktop/deep_learning_project/main/coco.yaml",
+    "epochs": 30,
+    "batch": 64,
+    "imgsz": 256,
+    "iou": 0.9,
+    "classes": [0,1,2,3,4,5,6,7,8]
+>>>>>>> fe1717aa1d1d0431a0c0620aa4092a87c9350c0b
 }
