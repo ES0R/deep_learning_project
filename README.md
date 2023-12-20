@@ -84,7 +84,7 @@ Note that if you want cuda to work with the software then use the following comm
 This makes the terminal more readable and enables the GPU node where the code will be executed.
 ### GPU Node
 ```
-a100sh
+sxm2sh
 ```
 ### Colorful prompt with Git branch
 ```
