@@ -3,7 +3,7 @@
 **Authors:** 
 - Daniel Jalel (s194291)
 - Emil Ramovic (s194149)
-- Magnus Bøje Madsen (s185382)
+- Magnus Madsen (s185382)
 - Cato Poulsen (s194127)
 - Andrew Blumensen (s194139)
 
@@ -19,11 +19,11 @@ As autonomous self-driving cars become more widespread, a notable shift from LiD
 
 The main objective of this project is to implement and compare the speed and overall performance concerning the accuracy of three distinct object detection models:
 
+- **Self-Made Model**
 - **YOLO (You Only Look Once)**
-- **ViT (Visual Transformer)**
-- **AlexNet**
+- **RT-DETR**
 
-AlexNet will serve as a simple baseline. These models will be assessed in the context of vehicle and robotics applications to gauge their appropriateness for real-time object recognition tasks. Object detection will be carried out on still image datasets as well as image sequence data sets.
+The self-made model will serve as a simple baseline. These models will be assessed in the context of vehicle applications to gauge their appropriateness for real-time object recognition tasks. Object detection will be carried out on still image datasets as well as image sequence data sets.
 
 ## Project File Structure
 
@@ -36,16 +36,16 @@ Project_Root/
 │   ├── notebooks/
 │   └── scripts/
 │
-├── ViT/
+├── RTDETR/
 │   ├── models/
 │   ├── notebooks/
 │   └── scripts/
 │
-├── AlexNet/
+├── NOTEBOOKS/
 │   ├── models/
 │   ├── notebooks/
 │   └── scripts/
-├── data
+│
 ├── requirements.txt
 ├── README.md
 └── .gitignore
@@ -121,3 +121,9 @@ Run the `train.sh` script with argument `YOLO` or `RTDETR` for training either. 
 ./train.sh YOLO
 ```
 This code lodas python `3.10.12`, activates the virtual environment automatically and trains the model.
+
+To train the self-made model run the `main_self.py` script in the root path. 
+
+## Running Inference and Processing Video
+
+The notebook `notebook.ipynb` loads the best models (self-made model, YOLO and RT-DETR) runs inference, processes a video and calculates FPS.  
