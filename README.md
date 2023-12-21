@@ -46,6 +46,9 @@ Project_Root/
 │   ├── notebooks/
 │   └── scripts/
 │
+├── main_self.py
+├── preprocessing.ipynb
+│
 ├── requirements.txt
 ├── README.md
 └── .gitignore
@@ -123,7 +126,7 @@ Run the `train.sh` script with argument `YOLO` or `RTDETR` for training either. 
 This code loads python `3.10.12`, activates the virtual environment automatically and trains the model.
 
 To run and train the self-made model (SMM) the data preprocessing script `preprocessing.ipynb` must be run first.
-After this, the path strings inside `main_self.py` must be changes to the correct output path of `preprocessing.ipynb`.
+After this, the path strings inside `main_self.py` must be changed to the correct output path of `preprocessing.ipynb`.
 Now run `main_self.py` from the root path.
 
 ## Running Inference and Processing Video
