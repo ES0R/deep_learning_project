@@ -31,20 +31,11 @@ The self-made model will serve as a simple baseline. These models will be assess
 .
 Project_Root/
 │
-├── YOLO/
-│   ├── models/
-│   ├── notebooks/
-│   └── scripts/
-│
-├── RTDETR/
-│   ├── models/
-│   ├── notebooks/
-│   └── scripts/
+├── main/
+│   └── train.py
 │
 ├── NOTEBOOKS/
-│   ├── models/
-│   ├── notebooks/
-│   └── scripts/
+│   └── notebook.ipynb
 │
 ├── main_self.py
 ├── preprocessing.ipynb
@@ -54,15 +45,9 @@ Project_Root/
 └── .gitignore
 ```
 
-In the above structure:
-- `data/` contains the datasets required for each model.
-- `models/` will store the trained model checkpoints.
-- `notebooks/` can be used to store Jupyter notebooks.
-- `scripts/` can store various utility scripts or the main code to run the experiments.
-
 
 ## Virtual Environment
-The project used python `3.10.7`. For testing reasons please use a virtual environment with the `requirements.txt` file.
+The project used python `3.10.12`. For testing reasons please use a virtual environment with the `requirements.txt` file.
 Preferable either with the name `deep` or `venv` as the `.gitignore` filters it out. To use the virtual environment on windows use the command to generate the virtual environment.
 
 ```
