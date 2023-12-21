@@ -1,4 +1,4 @@
-# Project Synopsis for Deep Learning
+# README
 
 **Authors:** 
 - Daniel Jalel (s194291)
@@ -7,7 +7,7 @@
 - Cato Poulsen (s194127)
 - Andrew Blumensen (s194139)
 
-**Date:** October 2023
+**Date:** December 2023
 
 ## Motivation
 
@@ -120,9 +120,11 @@ Run the `train.sh` script with argument `YOLO` or `RTDETR` for training either. 
 ```
 ./train.sh YOLO
 ```
-This code lodas python `3.10.12`, activates the virtual environment automatically and trains the model.
+This code loads python `3.10.12`, activates the virtual environment automatically and trains the model.
 
-To train the self-made model run the `main_self.py` script in the root path. 
+To run and train the self-made model (SMM) the data preprocessing script `preprocessing.ipynb` must be run first.
+After this, the path strings inside `main_self.py` must be changes to the correct output path of `preprocessing.ipynb`.
+Now run `main_self.py` from the root path.
 
 ## Running Inference and Processing Video
 
